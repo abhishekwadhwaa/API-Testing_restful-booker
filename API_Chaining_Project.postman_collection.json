@@ -1,0 +1,478 @@
+{
+  "info": {
+    "name": "API Chaining Project",
+    "description": "Restful Booker API testing with Postman. Demo credentials only. Run Core CRUD Flow in order; negative tests separately; data-driven folder with 3 iterations. Note: 20/20 regression result was obtained in the user's Postman workspace, not by GitHub CI.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Core CRUD Flow - Run in order",
+      "item": [
+        {
+          "name": "01 - Create Auth Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Auth 200\",()=>pm.response.to.have.status(200));",
+                  "if(pm.response.code===200){const x=pm.response.json();pm.test(\"Token returned\",()=>pm.expect(x.token).to.be.a(\"string\").and.not.empty);pm.collectionVariables.set(\"token\",x.token);pm.globals.set(\"token\",x.token);}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02 - Create Booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"Abhishek\",\n  \"lastname\": \"Sharma\",\n  \"totalprice\": 1500,\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"2026-11-10\",\n    \"checkout\": \"2026-11-15\"\n  },\n  \"additionalneeds\": \"Breakfast\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Booking created 200\",()=>pm.response.to.have.status(200));",
+                  "if(pm.response.code===200){const x=pm.response.json();pm.test(\"Booking ID generated\",()=>pm.expect(x.bookingid).to.be.a(\"number\"));pm.collectionVariables.set(\"bookingId\",x.bookingid);pm.globals.set(\"bookingId\",x.bookingid);}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03 - Get Booking + Schema",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"GET returns 200\",()=>pm.response.to.have.status(200));",
+                  "if(pm.response.code===200){const x=pm.response.json();pm.test(\"Firstname correct\",()=>pm.expect(x.firstname).to.eql(\"Abhishek\"));pm.test(\"Price correct\",()=>pm.expect(x.totalprice).to.eql(1500));pm.test(\"Dates present\",()=>{pm.expect(x.bookingdates.checkin).to.exist;pm.expect(x.bookingdates.checkout).to.exist;});const schema={type:\"object\",required:[\"firstname\",\"lastname\",\"totalprice\",\"depositpaid\",\"bookingdates\"],properties:{firstname:{type:\"string\"},lastname:{type:\"string\"},totalprice:{type:\"number\"},depositpaid:{type:\"boolean\"},bookingdates:{type:\"object\",required:[\"checkin\",\"checkout\"],properties:{checkin:{type:\"string\"},checkout:{type:\"string\"}}}}};pm.test(\"JSON schema valid\",()=>pm.response.to.have.jsonSchema(schema));}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04 - Update Booking (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"Rahul\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"PATCH 200\",()=>pm.response.to.have.status(200));if(pm.response.code===200){const x=pm.response.json();pm.test(\"Firstname updated\",()=>pm.expect(x.firstname).to.eql(\"Rahul\"));pm.test(\"Lastname unchanged\",()=>pm.expect(x.lastname).to.eql(\"Sharma\"));pm.test(\"Price unchanged\",()=>pm.expect(x.totalprice).to.eql(1500));}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "10 - Update Full Booking (PUT)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"Amit\",\n  \"lastname\": \"Verma\",\n  \"totalprice\": 2500,\n  \"depositpaid\": false,\n  \"bookingdates\": {\n    \"checkin\": \"2026-12-01\",\n    \"checkout\": \"2026-12-05\"\n  },\n  \"additionalneeds\": \"Lunch\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"PUT 200\",()=>pm.response.to.have.status(200));if(pm.response.code===200){const x=pm.response.json();pm.test(\"Firstname updated\",()=>pm.expect(x.firstname).to.eql(\"Amit\"));pm.test(\"Price updated\",()=>pm.expect(x.totalprice).to.eql(2500));pm.test(\"Deposit updated\",()=>pm.expect(x.depositpaid).to.eql(false));pm.test(\"Checkout updated\",()=>pm.expect(x.bookingdates.checkout).to.eql(\"2026-12-05\"));}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05 - Delete Booking",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "token={{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"DELETE 201\",()=>pm.response.to.have.status(201));pm.test(\"Deletion confirmed\",()=>pm.expect(pm.response.text()).to.eql(\"Created\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Negative Tests - Run separately",
+      "item": [
+        {
+          "name": "06 - Invalid Booking ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/booking/999999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "999999999"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404 for invalid ID\",()=>pm.response.to.have.status(404));pm.test(\"Not Found body\",()=>pm.expect(pm.response.text()).to.eql(\"Not Found\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07 - Invalid Auth Token",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "token=invalid12345",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"Hacker\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"403 for invalid token\",()=>pm.response.to.have.status(403));pm.test(\"Forbidden body\",()=>pm.expect(pm.response.text()).to.include(\"Forbidden\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08 - Missing Required Fields (Potential Defect)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"Abhishek\",\n  \"lastname\": \"Sharma\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Missing fields should be 4xx (known API issue if 500)\",()=>pm.expect(pm.response.code).to.be.within(400,499));pm.test(\"Request does not succeed\",()=>pm.expect(pm.response.code).not.to.be.within(200,299));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Data Driven - Run 3 iterations",
+      "item": [
+        {
+          "name": "09 - Data Driven Booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstname\":\"{{firstname}}\",\"lastname\":\"{{lastname}}\",\"totalprice\":{{totalprice}},\"depositpaid\":true,\"bookingdates\":{\"checkin\":\"2026-11-10\",\"checkout\":\"2026-11-15\"},\"additionalneeds\":\"Breakfast\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const rows=[{firstname:\"Rahul\",lastname:\"Sharma\",totalprice:1000},{firstname:\"Priya\",lastname:\"Singh\",totalprice:2000},{firstname:\"Amit\",lastname:\"Kumar\",totalprice:3000}];const row=rows[pm.info.iteration%rows.length];for(const [k,v] of Object.entries(row))pm.variables.set(k,v);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Booking created\",()=>pm.response.to.have.status(200));if(pm.response.code===200){const x=pm.response.json();pm.test(\"Firstname matches\",()=>pm.expect(x.booking.firstname).to.eql(pm.variables.get(\"firstname\")));pm.test(\"Price matches\",()=>pm.expect(x.booking.totalprice).to.eql(Number(pm.variables.get(\"totalprice\"))));}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://restful-booker.herokuapp.com"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "bookingId",
+      "value": ""
+    }
+  ]
+}
